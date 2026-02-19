@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generate Your Chinese Ancient Name</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;900&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:     #2c1a0e;
+    --paper:   #f5efe0;
+    --red:     #c0392b;
+    --gold:    #b8882a;
+    --gold-lt: #d4a843;
+    --teal:    #2a6b6b;
+    --muted:   #8a7560;
+    --div:     rgba(184,136,42,0.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+  }
+
+  .ink-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: url('Chinese ink painting.png') top center / contain no-repeat;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 50% 0%,  rgba(220,175,165,0.50) 0%, transparent 48%),
+      radial-gradient(ellipse at 15% 18%, rgba(215,160,152,0.32) 0%, transparent 42%),
+      radial-gradient(ellipse at 85% 12%, rgba(205,155,145,0.22) 0%, transparent 38%),
+      radial-gradient(ellipse at 20% 15%, rgba(212,168,67,0.09)  0%, transparent 55%),
+      radial-gradient(ellipse at 80% 85%, rgba(192,57,43,0.04)   0%, transparent 55%),
+      var(--paper);
+    font-family: 'Noto Sans SC', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .ink-left, .ink-right {
+    position: fixed; top: 0; bottom: 0; width: 2px;
+    background: linear-gradient(to bottom, transparent, rgba(184,136,42,0.3) 15%, rgba(184,136,42,0.3) 85%, transparent);
+    pointer-events: none;
+  }
+  .ink-left  { left: 28px; }
+  .ink-right { right: 28px; }
+
+  .seal {
+    position: fixed; width: 50px; height: 50px;
+    border: 1.5px solid var(--red);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif SC', serif; font-size: 0.58rem;
+    color: var(--red); writing-mode: vertical-rl; letter-spacing: 2px;
+    opacity: 0.38; pointer-events: none;
+  }
+  .seal-tl { top: 20px; left: 20px; }
+  .seal-br { bottom: 20px; right: 20px; }
+
+  .container { position: relative; z-index: 1; max-width: 620px; width: 100%; }
+
+  .header { text-align: center; margin-bottom: 32px; }
+
+  .header-sub {
+    font-family: 'Noto Serif SC', serif; font-size: 0.68rem;
+    color: var(--gold); letter-spacing: 0.5em; margin-bottom: 10px; opacity: 0.85;
+  }
+
+  h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(2.2rem, 8vw, 3.6rem); font-weight: 900;
+    color: var(--ink); letter-spacing: 0.22em; line-height: 1;
+    text-shadow: 1px 1px 0 rgba(184,136,42,0.18); margin-bottom: 10px;
+  }
+
+  .header-desc {
+    font-family: 'Noto Serif SC', serif; font-size: 0.82rem;
+    color: var(--muted); letter-spacing: 0.2em;
+  }
+
+  .scroll {
+    background: rgba(255,255,255,0.5);
+    border-radius: 3px; padding: 40px 36px;
+    box-shadow: 0 1px 0 var(--gold), 0 -1px 0 var(--gold),
+      0 20px 50px rgba(100,60,20,0.1), inset 0 0 60px rgba(184,136,42,0.04);
+  }
+  .scroll::before, .scroll::after {
+    content: ''; display: block; height: 13px;
+    background: linear-gradient(to right, #7a5a10, #c9942a, #f0c060, #c9942a, #7a5a10);
+    border-radius: 2px; margin: -40px -36px 32px;
+  }
+  .scroll::after { margin: 32px -36px -40px; }
+
+  .section-title {
+    font-family: 'Noto Serif SC', serif; font-size: 0.66rem;
+    letter-spacing: 0.45em; color: var(--muted); text-align: center;
+    margin-bottom: 22px; position: relative;
+  }
+  .section-title::before, .section-title::after {
+    content: ''; position: absolute; top: 50%; width: 28%; height: 1px; background: var(--div);
+  }
+  .section-title::before { left: 0; }
+  .section-title::after  { right: 0; }
+
+  .selectors { display: flex; gap: 16px; margin-bottom: 24px; }
+  .select-group { flex: 1; }
+
+  label {
+    display: block; font-family: 'Noto Serif SC', serif;
+    font-size: 0.68rem; color: var(--muted); letter-spacing: 0.35em;
+    margin-bottom: 8px; text-align: center;
+  }
+
+  select {
+    width: 100%; background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(184,136,42,0.2); border-bottom: 2px solid var(--gold);
+    border-radius: 2px; color: var(--ink); font-family: 'Noto Serif SC', serif;
+    font-size: 0.95rem; font-weight: 600; padding: 10px 12px;
+    cursor: pointer; outline: none; appearance: none;
+    text-align: center; letter-spacing: 0.1em;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  select:focus { background: white; border-bottom-color: var(--red); }
+  select option { background: #fff; color: var(--ink); }
+
+  .btn-generate {
+    width: 100%; padding: 14px; background: var(--ink); border: none;
+    border-radius: 2px; color: var(--gold-lt); font-family: 'Noto Serif SC', serif;
+    font-size: 1rem; letter-spacing: 0.55em; cursor: pointer;
+    transition: background 0.2s, letter-spacing 0.2s; margin-bottom: 30px;
+  }
+  .btn-generate:hover { background: #3d2410; letter-spacing: 0.65em; }
+  .btn-generate:active { transform: scaleY(0.97); }
+
+  .ornamental-divider {
+    text-align: center; font-family: 'Noto Serif SC', serif;
+    font-size: 0.9rem; letter-spacing: 0.7em; color: var(--gold); opacity: 0.4; margin: 22px 0;
+  }
+
+  .results { display: none; flex-direction: column; gap: 20px; }
+  .results.visible { display: flex; animation: unfurl 0.5s ease-out; }
+  @keyframes unfurl {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .name-card { border-radius: 2px; padding: 22px 24px; background: rgba(255,255,255,0.45); }
+  .name-card.elegant { border: 1px solid rgba(42,107,107,0.32); }
+  .name-card.funny   { border: 1px solid rgba(192,57,43,0.28); }
+
+  .card-type {
+    font-family: 'Noto Serif SC', serif; font-size: 0.6rem;
+    letter-spacing: 0.45em; margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .elegant .card-type { color: var(--teal); }
+  .funny   .card-type { color: var(--red); }
+  .card-type::after { content: ''; flex: 1; height: 1px; }
+  .elegant .card-type::after { background: rgba(42,107,107,0.22); }
+  .funny   .card-type::after { background: rgba(192,57,43,0.18); }
+
+  .name-main {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(2rem, 8vw, 3rem); font-weight: 900;
+    letter-spacing: 0.28em; line-height: 1; margin-bottom: 10px;
+  }
+  .elegant .name-main { color: var(--teal); }
+  .funny   .name-main { color: var(--red); }
+
+  .name-pinyin { font-size: 0.76rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 14px; font-style: italic; }
+
+  .name-meaning {
+    font-family: 'Noto Serif SC', serif; font-size: 0.82rem;
+    color: var(--ink); line-height: 1.95; padding-left: 14px; letter-spacing: 0.04em;
+  }
+  .elegant .name-meaning { border-left: 2px solid rgba(42,107,107,0.32); }
+  .funny   .name-meaning { border-left: 2px solid rgba(192,57,43,0.25); }
+
+  .name-source { margin-top: 10px; font-size: 0.68rem; color: var(--muted); letter-spacing: 0.18em; opacity: 0.68; }
+
+  .copy-row { margin-top: 14px; text-align: right; }
+  .copy-btn {
+    background: transparent; border: 1px solid var(--div); border-radius: 2px;
+    font-family: 'Noto Serif SC', serif; font-size: 0.68rem; letter-spacing: 0.22em;
+    padding: 5px 14px; cursor: pointer; color: var(--muted); transition: border-color 0.2s, color 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .placeholder {
+    text-align: center; color: var(--muted); font-family: 'Noto Serif SC', serif;
+    font-size: 0.82rem; letter-spacing: 0.3em; padding: 20px 0; opacity: 0.52;
+  }
+
+  /* Fortune reading */
+  .fortune-card {
+    display: none; margin-top: 20px; padding: 24px;
+    background: rgba(255,255,255,0.45); border-radius: 2px;
+    border: 1.5px solid var(--gold);
+    box-shadow: inset 0 0 30px rgba(184,136,42,0.06);
+  }
+  .fortune-card.visible { display: block; animation: unfurl 0.5s ease-out; }
+  .fortune-title {
+    font-family: 'Noto Serif SC', serif; font-size: 0.66rem;
+    letter-spacing: 0.45em; color: var(--gold); text-align: center;
+    margin-bottom: 18px; position: relative;
+  }
+  .fortune-title::before, .fortune-title::after {
+    content: ''; position: absolute; top: 50%; width: 28%; height: 1px;
+    background: rgba(184,136,42,0.35);
+  }
+  .fortune-title::before { left: 0; }
+  .fortune-title::after  { right: 0; }
+  .fortune-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;
+  }
+  .fortune-item {
+    text-align: center; padding: 10px 8px;
+    border: 1px solid rgba(184,136,42,0.15); border-radius: 2px;
+    background: rgba(255,255,255,0.4);
+  }
+  .fortune-label {
+    font-family: 'Noto Serif SC', serif; font-size: 0.6rem;
+    color: var(--muted); letter-spacing: 0.3em; margin-bottom: 6px;
+  }
+  .fortune-value {
+    font-family: 'Noto Serif SC', serif; font-size: 1rem;
+    color: var(--ink); font-weight: 600; letter-spacing: 0.15em;
+  }
+  .fortune-text {
+    font-family: 'Noto Serif SC', serif; font-size: 0.82rem;
+    color: var(--ink); line-height: 2; letter-spacing: 0.06em;
+    padding: 12px 16px; border-left: 2px solid var(--gold);
+    background: rgba(184,136,42,0.03);
+  }
+
+  /* Share button */
+  .share-btn {
+    display: inline-block; margin-top: 14px;
+    background: transparent; border: 1px solid var(--div); border-radius: 2px;
+    font-family: 'Noto Serif SC', serif; font-size: 0.68rem; letter-spacing: 0.22em;
+    padding: 5px 14px; cursor: pointer; color: var(--muted); transition: border-color 0.2s, color 0.2s;
+  }
+  .share-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .share-row { margin-top: 14px; text-align: right; }
+</style>
+</head>
+<body>
+
+<div class="ink-bg"></div>
+<div class="ink-left"></div>
+<div class="ink-right"></div>
+<div class="seal seal-tl">古风名</div>
+<div class="seal seal-br">生辰录</div>
+
+<div class="container">
+  <div class="header">
+    <div class="header-sub">以生辰推古名</div>
+    <h1>古风名字</h1>
+    <div class="header-desc">生辰 · 藏字 · 见名</div>
+  </div>
+
+  <div class="scroll">
+    <div class="section-title">填入生辰</div>
+    <div class="selectors">
+      <div class="select-group">
+        <label>月</label>
+        <select id="month">
+          <option value="1">一月</option><option value="2">二月</option>
+          <option value="3">三月</option><option value="4">四月</option>
+          <option value="5">五月</option><option value="6">六月</option>
+          <option value="7">七月</option><option value="8">八月</option>
+          <option value="9">九月</option><option value="10">十月</option>
+          <option value="11">十一月</option><option value="12">十二月</option>
+        </select>
+      </div>
+      <div class="select-group">
+        <label>日</label>
+        <select id="day"></select>
+      </div>
+    </div>
+
+    <button class="btn-generate" onclick="generate()">推算古名</button>
+
+    <div id="placeholder" class="placeholder">请选择生辰，以观天命</div>
+
+    <div class="results" id="results">
+      <div class="name-card elegant">
+        <div class="card-type">雅名 · 古风</div>
+        <div class="name-main" id="elegant-name"></div>
+        <div class="name-pinyin" id="elegant-pinyin"></div>
+        <div class="name-meaning" id="elegant-meaning"></div>
+        <div class="name-source" id="elegant-source"></div>
+        <div class="share-row"><button class="share-btn" onclick="shareCard('elegant')">生成名帖</button></div>
+      </div>
+      <div class="ornamental-divider">· · ·</div>
+      <div class="name-card funny">
+        <div class="card-type">诨名 · 搞笑</div>
+        <div class="name-main" id="funny-name"></div>
+        <div class="name-pinyin" id="funny-pinyin"></div>
+        <div class="name-meaning" id="funny-meaning"></div>
+        <div class="name-source" id="funny-source"></div>
+        <div class="share-row"><button class="share-btn" onclick="shareCard('funny')">生成名帖</button></div>
+      </div>
+    </div>
+
+    <div class="fortune-card" id="fortune-card">
+      <div class="fortune-title">命理解读</div>
+      <div class="fortune-grid">
+        <div class="fortune-item">
+          <div class="fortune-label">性情</div>
+          <div class="fortune-value" id="fort-trait"></div>
+        </div>
+        <div class="fortune-item">
+          <div class="fortune-label">命属</div>
+          <div class="fortune-value" id="fort-element"></div>
+        </div>
+        <div class="fortune-item">
+          <div class="fortune-label">吉方</div>
+          <div class="fortune-value" id="fort-dir"></div>
+        </div>
+        <div class="fortune-item">
+          <div class="fortune-label">幸数</div>
+          <div class="fortune-value" id="fort-num"></div>
+        </div>
+      </div>
+      <div class="fortune-text" id="fort-advice"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const eS = ['沈','林','江','云','萧','顾','谢','陆','苏','白','孟','姜','叶','宋','岑','裴','温','容','凌','穆','晏','司','闻','楚','霍'];
+const fS = ['熊','牛','马','羊','猪','狗','鸡','龙','鱼','虎','兔','蛇','猫','鼠','驴','狐','猴','鹿','狼','蟹'];
+
+const eM = {
+  1:{c:['未央','初晗','凌霄'],s:'取自《诗经·小雅·庭燎》，意为夜未尽，光未歇，寓无尽生机。'},
+  2:{c:['如故','芷汀','蘅芜'],s:'取自《楚辞·离骚》蘅芷香草意象，喻高洁品性。'},
+  3:{c:['芳菲','绿绮','碧澜'],s:'取自《诗经·郑风·溱洧》春水漫溪，芳草萋萋。'},
+  4:{c:['暮迟','烟霞','云鬟'],s:'取自李商隐《无题》，春蚕到死丝方尽，意蕴深远。'},
+  5:{c:['流萤','丹心','榴火'],s:'取自《楚辞·九歌》，夏夜萤火，忠心不渝之意。'},
+  6:{c:['荷风','漪澜','翠微'],s:'取自王维《山居秋暝》，荷叶生风，清凉出尘。'},
+  7:{c:['七夕','银汉','星渚'],s:'取自秦观《鹊桥仙》银汉迢迢暗渡，情深意长。'},
+  8:{c:['桂魄','素辉','望舒'],s:'取自《楚辞》前望舒使先驱兮，月神御风之意。'},
+  9:{c:['霜序','菊隐','秋实'],s:'取自陶渊明《饮酒》，采菊东篱，悠然见南山。'},
+  10:{c:['寒碧','枫絮','归鸿'],s:'取自《诗经·豳风·七月》秋日归途，霜叶如火。'},
+  11:{c:['暮雪','素节','凛音'],s:'取自岑参《白雪歌》，瀚海阑干百丈冰，愁云惨淡。'},
+  12:{c:['梅骨','岁寒','素心'],s:'取自王安石《梅花》，凌寒独自开，暗香浮动。'},
+};
+
+const fM = {
+  1:{c:['冻脚','打盹','裹被'],m:'生于严冬，天命难逃，脚冻手僵，此乃天意。'},
+  2:{c:['等春','盼饭','倦眠'],m:'二月将尽，春仍不来，满心期盼，饥肠辘辘。'},
+  3:{c:['困觉','打喷','揉眼'],m:'春困秋乏，此乃古训，生于三月，命中带困。'},
+  4:{c:['踏水','淋头','湿衣'],m:'四月清明，雨水连绵，出门必湿，命也如此。'},
+  5:{c:['捉蚊','挥扇','躁热'],m:'五月初夏，蚊虫猖獗，手持蒲扇，坐立不安。'},
+  6:{c:['汗颜','黏衣','烫脚'],m:'六月盛夏，汗流浃背，地砖烫脚，此命不易。'},
+  7:{c:['吹空','喝冰','晒蔫'],m:'七月流火，靠空调续命，冰饮为伴，蔫然度日。'},
+  8:{c:['揉肚','饱嗝','贪食'],m:'八月中秋，月饼当前，把持不住，腹饱而眠。'},
+  9:{c:['掉叶','打喷','穿多'],m:'九月秋凉，冷热不均，喷嚏频发，衣服穿多。'},
+  10:{c:['缩脖','揣手','蜷身'],m:'十月初寒，缩颈藏手，蜷身取暖，形如虾米。'},
+  11:{c:['懒起','赖床','磨蹭'],m:'十一月严寒，被窝温暖，起床一事，难于登天。'},
+  12:{c:['冻耳','呵气','溜冰'],m:'腊月严冬，呵气成雾，耳朵通红，路滑如冰。'},
+};
+
+const f2 = ['','嗝','打','挠','趴','懵','傻','晕','囧','愣','蒙','呆','困','怂','躺','颤','晃','蔫','糊','迷','慌','咣','扑','摔','滚','懒','撒','拖','磨','贪','闹','哭'];
+
+const epy = {'未央':'wèi yāng','初晗':'chū hán','凌霄':'líng xiāo','如故':'rú gù','芷汀':'zhǐ tīng','蘅芜':'héng wú','芳菲':'fāng fēi','绿绮':'lǜ qǐ','碧澜':'bì lán','暮迟':'mù chí','烟霞':'yān xiá','云鬟':'yún huán','流萤':'liú yíng','丹心':'dān xīn','榴火':'liú huǒ','荷风':'hé fēng','漪澜':'yī lán','翠微':'cuì wēi','七夕':'qī xī','银汉':'yín hàn','星渚':'xīng zhǔ','桂魄':'guì pò','素辉':'sù huī','望舒':'wàng shū','霜序':'shuāng xù','菊隐':'jú yǐn','秋实':'qiū shí','寒碧':'hán bì','枫絮':'fēng xù','归鸿':'guī hóng','暮雪':'mù xuě','素节':'sù jié','凛音':'lǐn yīn','梅骨':'méi gǔ','岁寒':'suì hán','素心':'sù xīn'};
+
+const spy = {'沈':'shěn','林':'lín','江':'jiāng','云':'yún','萧':'xiāo','顾':'gù','谢':'xiè','陆':'lù','苏':'sū','白':'bái','孟':'mèng','姜':'jiāng','叶':'yè','宋':'sòng','岑':'cén','裴':'péi','温':'wēn','容':'róng','凌':'líng','穆':'mù','晏':'yàn','司':'sī','闻':'wén','楚':'chǔ','霍':'huò'};
+
+const mngs = {'未央':'未尽之意，长夜将阑，光明将至。含无限生机、前程广阔之寓。','初晗':'晨曦初绽，含光而笑。寓初心不改、朝气蓬勃。','凌霄':'凌云壮志，直上霄汉，不为俗尘所羁。','如故':'经年如旧，情深意笃，如初见般温柔。','芷汀':'白芷生于水畔，清香远溢，品性高洁。','蘅芜':'香草繁茂，出自《离骚》，比君子之德。','芳菲':'春花烂漫，芬芳馥郁，生机盎然之象。','绿绮':'古琴之名，音色清越，寓才华横溢。','碧澜':'碧水涟漪，清澈见底，心境澄明。','暮迟':'暮色将至，悠然自得，不慌不忙之态。','烟霞':'云烟霞光，缥缈出尘，意境深远。','云鬟':'云鬟雾鬓，婉约柔美，诗意流转。','流萤':'萤火点点，夏夜流光，生命虽微，光亦璀璨。','丹心':'赤胆忠心，热血报国，出自文天祥《过零丁洋》。','榴火':'石榴如火，热烈盛放，生命力旺盛。','荷风':'荷叶田田，清风徐来，一派清凉出尘。','漪澜':'水波荡漾，层层递进，如心境之宽广。','翠微':'山色青翠，云雾缥缈，意境悠远。','七夕':'星河灿烂，情深义重，牛女相会之夜。','银汉':'银河浩渺，星光万里，胸怀宇宙之志。','星渚':'星河洲渚，天水相接，出尘脱俗之境。','桂魄':'月之魂魄，桂香浮动，清辉万里。','素辉':'素洁之光，皎皎明月，心地纯净。','望舒':'月神之名，出自《楚辞》，驾月御风。','霜序':'霜降时序，天高气爽，秋之肃穆。','菊隐':'菊花隐于东篱，不争繁华，自有风骨。','秋实':'秋日硕果，积累有成，踏实厚重之意。','寒碧':'寒水碧澄，清冽澄澈，寒中见清。','枫絮':'枫叶如火，随风飘絮，自在洒脱。','归鸿':'归雁传书，思乡情切，游子归途。','暮雪':'暮色苍茫，大雪纷飞，静谧肃穆。','素节':'素雅节操，冬日之志，洁白如雪。','凛音':'凛冽之音，穿透霜雪，清越高远。','梅骨':'梅花风骨，凌寒傲雪，不屈之志。','岁寒':'岁暮天寒，松竹梅乃岁寒三友，高洁自守。','素心':'素净之心，不染尘埃，纯真本性。'};
+
+const monthSel = document.getElementById('month');
+const daySel   = document.getElementById('day');
+const nums = ['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','二十一','二十二','二十三','二十四','二十五','二十六','二十七','二十八','二十九','三十','三十一'];
+
+function populateDays() {
+  const m = parseInt(monthSel.value);
+  const count = new Date(2024, m, 0).getDate();
+  const cur = parseInt(daySel.value) || 1;
+  daySel.innerHTML = '';
+  for (let i = 1; i <= count; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = nums[i-1] + '日';
+    if (i === cur) o.selected = true;
+    daySel.appendChild(o);
+  }
+}
+monthSel.addEventListener('change', populateDays);
+populateDays();
+
+function r(seed) { return Math.abs(Math.sin(seed + 1) * 10000) % 1; }
+
+function generate() {
+  const month = parseInt(monthSel.value);
+  const day   = parseInt(daySel.value);
+  const seed  = month * 100 + day;
+
+  const ed   = eM[month];
+  const esur = eS[Math.floor(r(seed) * eS.length)];
+  const ech  = ed.c[Math.floor(r(seed+7) * ed.c.length)];
+
+  const fd   = fM[month];
+  const fsur = fS[Math.floor(r(seed+13) * fS.length)];
+  const fc   = fd.c[Math.floor(r(seed+5) * fd.c.length)];
+  const fc2  = f2[day] || f2[(day%10)+1];
+  const fdbl = fc[0] + fc2;
+
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('elegant-name').textContent    = esur + ech;
+  document.getElementById('elegant-pinyin').textContent  = (spy[esur]||esur) + ' · ' + (epy[ech]||'');
+  document.getElementById('elegant-meaning').textContent = '「' + ech + '」' + (mngs[ech]||'意境深远，含蓄蕴藉，耐人寻味。');
+  document.getElementById('elegant-source').textContent  = ed.s;
+  document.getElementById('funny-name').textContent      = fsur + fdbl;
+  document.getElementById('funny-pinyin').textContent    = '名如其人，无需注音';
+  document.getElementById('funny-meaning').textContent   = '「' + fdbl + '」' + fd.m;
+  document.getElementById('funny-source').textContent    = '取自民间口耳相传，不见经传，却深入人心。';
+
+  const res = document.getElementById('results');
+  res.classList.remove('visible');
+  void res.offsetWidth;
+  res.classList.add('visible');
+
+  // Fortune reading
+  showFortune(seed, month, day);
+}
+
+/* ── Fortune Reading ── */
+const traits = ['温润如玉','刚毅果敢','聪慧灵秀','豁达开朗','沉稳内敛','热情奔放','细腻敏感','洒脱不羁','仁厚宽和','机敏善辩','淡泊从容','坚韧不拔'];
+const elements = ['金','木','水','火','土'];
+const elemIcons = ['🜁','🜂','🜄','🜃','🜅'];
+const dirs = ['东方','西方','南方','北方','东南','西南','东北','西北'];
+const advices = [
+  '宜静心读书，修身养性，方能厚积薄发。',
+  '贵人在远方，行万里路，见天地之广大。',
+  '守拙藏锋，待时而动，大器可期。',
+  '宜广结善缘，以诚待人，福报自来。',
+  '勿急勿躁，缓则圆，从容应万变。',
+  '宜习一技之长，精益求精，名利自至。',
+  '心存感恩，知足常乐，平安即福。',
+  '逢山开路，遇水搭桥，困境皆是历练。',
+  '宜早起晚归，勤勉为本，天道酬勤。',
+  '贵在坚持，水滴石穿，终成大事。',
+  '独处时养心，群处时养口，修心为要。',
+  '宜亲近自然，山水之间，灵感自生。',
+];
+
+function showFortune(seed, month, day) {
+  const s = seed;
+  const trait = traits[Math.floor(r(s + 31) * traits.length)];
+  const elemIdx = Math.floor(r(s + 41) * elements.length);
+  const dir = dirs[Math.floor(r(s + 53) * dirs.length)];
+  const luckyNum = Math.floor(r(s + 67) * 9) + 1;
+  const advice = advices[Math.floor(r(s + 79) * advices.length)];
+
+  document.getElementById('fort-trait').textContent = trait;
+  document.getElementById('fort-element').textContent = elements[elemIdx];
+  document.getElementById('fort-dir').textContent = dir;
+  document.getElementById('fort-num').textContent = luckyNum;
+  document.getElementById('fort-advice').textContent =
+    '生于' + month + '月' + day + '日，性属「' + trait + '」，命属「' + elements[elemIdx] + '」行。' + advice;
+
+  const fc = document.getElementById('fortune-card');
+  fc.classList.remove('visible');
+  void fc.offsetWidth;
+  fc.classList.add('visible');
+}
+
+/* ── Share as Image ── */
+function shareCard(type) {
+  const name = document.getElementById(type + '-name').textContent;
+  const pinyin = document.getElementById(type + '-pinyin').textContent;
+  const meaning = document.getElementById(type + '-meaning').textContent;
+  const source = document.getElementById(type + '-source').textContent;
+  const isElegant = type === 'elegant';
+
+  const W = 600, H = 780;
+  const cvs = document.createElement('canvas');
+  cvs.width = W; cvs.height = H;
+  const ctx = cvs.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#f5efe0';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle gradient overlay
+  const grd = ctx.createRadialGradient(W/2, 0, 0, W/2, 0, W);
+  grd.addColorStop(0, 'rgba(220,175,165,0.3)');
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+
+  // Decorative border
+  const accent = isElegant ? '#2a6b6b' : '#c0392b';
+  ctx.strokeStyle = '#b8882a';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(24, 24, W - 48, H - 48);
+  ctx.strokeStyle = 'rgba(184,136,42,0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(32, 32, W - 64, H - 64);
+
+  // Gold bar top and bottom
+  const barGrd = ctx.createLinearGradient(40, 0, W - 40, 0);
+  barGrd.addColorStop(0, '#7a5a10');
+  barGrd.addColorStop(0.3, '#c9942a');
+  barGrd.addColorStop(0.5, '#f0c060');
+  barGrd.addColorStop(0.7, '#c9942a');
+  barGrd.addColorStop(1, '#7a5a10');
+  ctx.fillStyle = barGrd;
+  ctx.fillRect(40, 40, W - 80, 10);
+  ctx.fillRect(40, H - 50, W - 80, 10);
+
+  // Card type label
+  ctx.font = '16px "Noto Serif SC", serif';
+  ctx.fillStyle = accent;
+  ctx.textAlign = 'center';
+  ctx.fillText(isElegant ? '雅 名 · 古 风' : '诨 名 · 搞 笑', W/2, 90);
+
+  // Name (large)
+  ctx.font = '900 72px "Noto Serif SC", serif';
+  ctx.fillStyle = accent;
+  ctx.fillText(name, W/2, 200);
+
+  // Pinyin
+  ctx.font = 'italic 18px "Noto Serif SC", serif';
+  ctx.fillStyle = '#8a7560';
+  ctx.fillText(pinyin, W/2, 240);
+
+  // Divider line
+  ctx.beginPath();
+  ctx.moveTo(W/2 - 80, 268);
+  ctx.lineTo(W/2 + 80, 268);
+  ctx.strokeStyle = 'rgba(184,136,42,0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Meaning (wrapped text)
+  ctx.font = '18px "Noto Serif SC", serif';
+  ctx.fillStyle = '#2c1a0e';
+  ctx.textAlign = 'left';
+  wrapText(ctx, meaning, 60, 310, W - 120, 32);
+
+  // Source
+  ctx.font = '14px "Noto Serif SC", serif';
+  ctx.fillStyle = '#8a7560';
+  ctx.globalAlpha = 0.7;
+  ctx.textAlign = 'left';
+  wrapText(ctx, source, 60, 520, W - 120, 26);
+  ctx.globalAlpha = 1;
+
+  // Seal stamp
+  const sealSize = 56;
+  const sx = W - 90, sy = H - 120;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(-0.15);
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.5;
+  ctx.strokeRect(-sealSize/2, -sealSize/2, sealSize, sealSize);
+  ctx.font = '600 14px "Noto Serif SC", serif';
+  ctx.fillStyle = accent;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(isElegant ? '古风' : '诨名', 0, -8);
+  ctx.fillText(isElegant ? '雅名' : '搞笑', 0, 12);
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Watermark
+  ctx.font = '12px "Noto Serif SC", serif';
+  ctx.fillStyle = 'rgba(138,117,96,0.4)';
+  ctx.textAlign = 'center';
+  ctx.fillText('古风名字 · 以生辰推古名', W/2, H - 65);
+
+  // Download
+  const link = document.createElement('a');
+  link.download = name + '-名帖.png';
+  link.href = cvs.toDataURL('image/png');
+  link.click();
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH) {
+  let line = '';
+  let cy = y;
+  for (let i = 0; i < text.length; i++) {
+    const test = line + text[i];
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, x, cy);
+      line = text[i];
+      cy += lineH;
+    } else {
+      line = test;
+    }
+  }
+  if (line) ctx.fillText(line, x, cy);
+}
+
+
+</script>
+</body>
+</html>
